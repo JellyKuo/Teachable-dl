@@ -49,7 +49,7 @@ def truncate_title_to_fit_file_name(title, max_file_name_length=250):
 
 class TeachableDownloader:
     def __init__(self, verbose_arg=False, complete_lecture_arg=False, user_agent_arg=None, timeout_arg=10):
-        self.driver = Driver(uc=True, headed=True)
+        self.driver = Driver(uc=True, headed=True, external_pdf=True)
         self.headers = {
             "User-Agent": user_agent_arg,
             "Origin": "https://player.hotmart.com",
