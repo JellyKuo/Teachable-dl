@@ -28,12 +28,13 @@ def create_folder(course_title):
 
 def clean_string(data):
     logging.debug("Cleaning string: " + data)
-    # Remove all non-ASCII characters (including emojis)
-    data = data.encode('ascii', 'ignore').decode('ascii')
     # Replace specific characters with "-"
-    return data.replace("\n", "-").replace(" ", "-").replace(":", "-") \
-        .replace("/", "-").replace("|", "-").replace("*", "").replace("?", "-").replace("<", "-") \
-        .replace(">", "-").replace("\"", "-").replace("\\", "-")
+    data = re.sub(r'[<>:"/\\|?*\x00-\x1F]', '-', data)
+    # Remove leading/trailing whitespace and replace multiple spaces with a single dash
+    data = re.sub(r'\s+', '-', data.strip())
+    # Limit the length of the filename to avoid OS restrictions
+    max_length = 255
+    return data[:max_length]
 
 
 def truncate_title_to_fit_file_name(title, max_file_name_length=250):
