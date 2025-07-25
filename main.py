@@ -756,7 +756,7 @@ class TeachableDownloader:
                 logging.info("Downloading PDF attachment: " + pdf_file_name + " for video: " + title)
                 # Use the webdriver to download the PDF
                 os.makedirs(output_path, exist_ok=True)
-                self.webdriver_download(output_path, lambda: pdf_link.click())
+                self.webdriver_download(output_path, lambda: pdf_link.click(), pdf_file_name)
         else:
             logging.info("No PDF attachments found for video: " + title)
 
@@ -771,7 +771,7 @@ class TeachableDownloader:
         self.driver.save_print_page(output_file_pdf)
         logging.info("Saved webpage as pdf: " + output_file_pdf)
 
-    def webdriver_download(self, output_path, trigger_download, timeout=-1):
+    def webdriver_download(self, output_path, trigger_download, expected_output_file_name=None,timeout=-1):
         # Set the download directory for this file
         self.driver.execute_cdp_cmd("Page.setDownloadBehavior", {
             "behavior": "allow",
@@ -788,11 +788,18 @@ class TeachableDownloader:
         while True:
             files_after_download = set(os.listdir(output_path))
 
-            # Find new files
-            new_files = files_after_download - files_before_download
+            if expected_output_file_name:
+                if expected_output_file_name in files_after_download:
+                    logging.debug(f"Expected file {expected_output_file_name} found.")
+                    return os.path.join(output_path, expected_output_file_name)
+            else:
+                logging.debug("No expected file name provided, checking for new files.")
+                # Find new files
+                new_files = files_after_download - files_before_download
 
-            if len(new_files) == 1 and not list(new_files)[0].endswith('.crdownload'):
-                break
+                if len(new_files) == 1 and not list(new_files)[0].endswith('.crdownload'):
+                    logging.debug(f"New file found: {list(new_files)[0]}")
+                    return os.path.join(output_path, list(new_files)[0])
             
             if timeout > 0 and (time.time() - start_time) > timeout:
                 logging.warning(f"Download timeout")
@@ -800,8 +807,6 @@ class TeachableDownloader:
         
             time.sleep(1)
 
-        latest_file = os.path.join(output_path, list(new_files)[0])
-        return latest_file
 
     def clean_up(self):
         logging.info("Cleaning up")
